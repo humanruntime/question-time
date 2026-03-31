@@ -608,6 +608,14 @@ const QUESTIONS = [
   },
 ];
 
+// ─────────────────────────────────────────────────────────────────
+// CONFIG — paste the Sheet ID here once the Google Sheet is set up
+// ─────────────────────────────────────────────────────────────────
+const CONFIG = {
+  sheetId: '1gcO5tppDGvsEd29o0Q0jJe2fBd8zRzR-vmVkZ12mdGA'
+};
+// ─────────────────────────────────────────────────────────────────
+
 // ── State ──
 let state = {
   round: 0,
@@ -862,9 +870,67 @@ function showScreen(id) {
   document.getElementById('mainCard').style.animation = '';
 }
 
+// ── Google Sheets loader ──
+async function loadQuestionsFromSheet() {
+  if (!CONFIG.sheetId) return;
+  const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&sheet=Sheet1`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const csv = await res.text();
+    const parsed = parseSheetCSV(csv);
+    if (parsed.length > 0) { QUESTIONS.length = 0; QUESTIONS.push(...parsed); }
+  } catch(e) { /* silent fallback to embedded questions */ }
+}
+
+function parseSheetCSV(text) {
+  const splitRows = str => {
+    const rows = []; let cur = ''; let inQ = false;
+    for (let i = 0; i < str.length; i++) {
+      const c = str[i];
+      if (c === '"') { if (inQ && str[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+      else if ((c === '\n' || c === '\r') && !inQ) { if (cur || rows.length) rows.push(cur); cur = ''; if (c === '\r' && str[i+1] === '\n') i++; }
+      else cur += c;
+    }
+    if (cur) rows.push(cur);
+    return rows;
+  };
+  const splitFields = row => {
+    const fields = []; let field = ''; let inQ = false;
+    for (let i = 0; i < row.length; i++) {
+      const c = row[i];
+      if (c === '"') { if (inQ && row[i+1] === '"') { field += '"'; i++; } else inQ = !inQ; }
+      else if (c === ',' && !inQ) { fields.push(field); field = ''; }
+      else field += c;
+    }
+    fields.push(field);
+    return fields;
+  };
+  const rows = splitRows(text);
+  if (rows.length < 2) return [];
+  const headers = splitFields(rows[0]).map(h => h.trim().toLowerCase().replace(/\s+/g,'_'));
+  return rows.slice(1).filter(r => r.trim()).map(row => {
+    const vals = splitFields(row);
+    const get = key => (vals[headers.indexOf(key)] || '').trim();
+    return {
+      id: parseInt(get('id')) || 0,
+      topic: get('topic') || 'General',
+      question: get('question'),
+      correct: get('correct'),
+      wrong: [get('wrong_1'), get('wrong_2'), get('wrong_3')].filter(Boolean),
+      explanation: get('explanation'),
+      fun_facts: [get('fun_fact_1'), get('fun_fact_2'), get('fun_fact_3')].filter(Boolean)
+    };
+  }).filter(q => q.question && q.correct);
+}
+
 // ── Init ──
-loadState();
-updateHomeScreen();
+async function init() {
+  loadState();
+  await loadQuestionsFromSheet();
+  updateHomeScreen();
+}
+init();
 </script>
 </body>
 </html>
