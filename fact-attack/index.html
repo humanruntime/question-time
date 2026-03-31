@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Fact Attack! ⚡</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fffbeb;
+    --surface: #ffffff;
+    --border: #fde68a;
+    --text: #1c1917;
+    --muted: #78716c;
+    --primary: #f59e0b;
+    --primary-dim: rgba(245,158,11,0.12);
+    --primary-dark: #d97706;
+    --success: #10b981;
+    --success-dim: rgba(16,185,129,0.12);
+    --danger: #ef4444;
+    --danger-dim: rgba(239,68,68,0.1);
+    --radius: 18px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.14);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0 48px;
+  }
+
+  /* ── Header ── */
+  .app-header {
+    width: 100%;
+    max-width: 480px;
+    padding: 1.2rem 1.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .app-name {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  .app-name span { color: var(--primary); }
+  .streak-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #d97706;
+    background: rgba(245,158,11,0.15);
+    border: 2px solid rgba(245,158,11,0.25);
+    border-radius: 20px;
+    padding: 0.3rem 0.8rem;
+  }
+
+  /* ── Card ── */
+  .card {
+    width: calc(100% - 2rem);
+    max-width: 480px;
+    margin: 1rem auto 0;
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    animation: pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.96) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  /* ── Progress ── */
+  .progress-bar { height: 5px; background: #fef3c7; width: 100%; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #fbbf24); transition: width 0.4s ease; border-radius: 0 3px 3px 0; }
+
+  /* ── Screens ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── HOME ── */
+  .home-inner { padding: 2rem 1.75rem 2rem; text-align: center; }
+  .round-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--primary-dark);
+    background: var(--primary-dim);
+    border-radius: 20px;
+    padding: 0.3rem 0.9rem;
+    margin-bottom: 1rem;
+    border: 2px solid rgba(245,158,11,0.2);
+  }
+  .home-title {
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 0.4rem;
+  }
+  .home-sub {
+    font-size: 0.88rem;
+    color: var(--muted);
+    margin-bottom: 1.75rem;
+    line-height: 1.5;
+    font-weight: 600;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+    margin-bottom: 1.75rem;
+  }
+  .stat-box {
+    background: #fffbeb;
+    border-radius: 14px;
+    padding: 0.85rem 0.4rem;
+    text-align: center;
+    border: 2px solid #fde68a;
+  }
+  .stat-val { font-size: 1.5rem; font-weight: 900; color: var(--text); line-height: 1; margin-bottom: 0.2rem; }
+  .stat-val.amber { color: var(--primary-dark); }
+  .stat-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 800; }
+
+  .topic-list { text-align: left; margin-bottom: 1.75rem; }
+  .topic-list-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.6rem; }
+  .topic-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0; border-bottom: 1px solid #fef3c7; }
+  .topic-row:last-child { border-bottom: none; }
+  .topic-name { font-size: 0.8rem; color: var(--text); flex: 1; font-weight: 700; }
+  .topic-bar-wrap { width: 70px; height: 6px; background: #fef3c7; border-radius: 3px; }
+  .topic-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+  .topic-pct { font-size: 0.7rem; font-weight: 800; color: var(--muted); width: 32px; text-align: right; }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 1.1rem;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    text-align: center;
+    letter-spacing: 0.01em;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: linear-gradient(135deg, #f59e0b, #f97316); color: white; box-shadow: 0 4px 20px rgba(245,158,11,0.4); }
+  .btn-primary:hover { box-shadow: 0 6px 24px rgba(245,158,11,0.5); }
+  .btn-ghost { background: #fef3c7; color: var(--primary-dark); font-weight: 800; margin-top: 0.75rem; font-size: 0.9rem; padding: 0.85rem; border: 2px solid #fde68a; }
+
+  /* ── QUESTION ── */
+  .q-meta { padding: 1.25rem 1.5rem 0; display: flex; align-items: center; justify-content: space-between; }
+  .q-type-chip {
+    display: flex; align-items: center; gap: 0.3rem;
+    font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 0.3rem 0.75rem; border-radius: 20px;
+  }
+  .q-counter { font-size: 0.78rem; color: var(--muted); font-weight: 800; }
+
+  .q-body { padding: 1.1rem 1.5rem 1.4rem; }
+  .q-text { font-size: 1.2rem; font-weight: 800; line-height: 1.4; color: var(--text); margin-bottom: 1.25rem; }
+
+  .options { display: flex; flex-direction: column; gap: 0.6rem; }
+  .option {
+    display: block; width: 100%;
+    padding: 1rem 1.1rem;
+    background: #fffbeb;
+    border: 2.5px solid #fde68a;
+    border-radius: 14px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.92rem; font-weight: 700; color: var(--text);
+    text-align: left; cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    line-height: 1.4;
+  }
+  .option:hover { border-color: var(--primary); background: var(--primary-dim); transform: translateX(3px); }
+  .option.correct { border-color: var(--success); background: var(--success-dim); color: #065f46; font-weight: 800; }
+  .option.wrong { border-color: var(--danger); background: var(--danger-dim); color: #b91c1c; }
+  .option.disabled { cursor: default; pointer-events: none; }
+  .option.reveal { border-color: var(--success); background: var(--success-dim); }
+
+  /* ── FEEDBACK ── */
+  .feedback-box {
+    margin: 0 1.5rem 0.75rem;
+    padding: 1rem 1.1rem;
+    border-radius: 14px;
+    display: none;
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .feedback-box.show { display: block; }
+  .feedback-box.correct { background: var(--success-dim); border: 2px solid rgba(16,185,129,0.3); }
+  .feedback-box.wrong { background: var(--danger-dim); border: 2px solid rgba(239,68,68,0.2); }
+  .feedback-result { font-size: 0.85rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem; }
+  .feedback-box.correct .feedback-result { color: var(--success); }
+  .feedback-box.wrong .feedback-result { color: var(--danger); }
+  .feedback-explain { font-size: 0.82rem; color: var(--text); line-height: 1.55; font-weight: 600; }
+
+  /* ── FUN FACT CARD (Top Trumps style) ── */
+  .fact-card {
+    margin: 0 1.5rem 1rem;
+    border-radius: 14px;
+    overflow: hidden;
+    display: none;
+    animation: fadeIn 0.3s ease 0.1s both;
+    box-shadow: 0 3px 14px rgba(0,0,0,0.1);
+  }
+  .fact-card.show { display: block; }
+  .fact-card-header {
+    padding: 0.65rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .fact-card-emoji { font-size: 1.3rem; line-height: 1; }
+  .fact-card-title { font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: white; }
+  .fact-card-body { padding: 0.85rem 1rem; background: white; }
+  .fact-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    padding: 0.3rem 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.4;
+    border-bottom: 1px solid #f5f5f4;
+  }
+  .fact-item:last-child { border-bottom: none; }
+  .fact-bullet { font-size: 0.7rem; color: var(--primary); margin-top: 0.1rem; flex-shrink: 0; }
+
+  /* ── NEXT BUTTON ── */
+  .btn-next {
+    display: none;
+    width: calc(100% - 3rem);
+    margin: 0 1.5rem 1.5rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(245,158,11,0.35);
+    transition: transform 0.1s;
+  }
+  .btn-next:active { transform: scale(0.97); }
+  .btn-next.show { display: block; }
+
+  /* ── ROUND COMPLETE ── */
+  .complete-inner { padding: 2rem 1.75rem; text-align: center; }
+  .complete-icon { font-size: 3.5rem; margin-bottom: 0.75rem; line-height: 1; animation: bounce 0.6s ease; }
+  @keyframes bounce { 0% { transform: scale(0.5); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  .complete-round { font-size: 0.72rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.12em; color: var(--primary-dark); margin-bottom: 0.4rem; }
+  .complete-title { font-size: 1.7rem; font-weight: 900; color: var(--text); margin-bottom: 0.4rem; line-height: 1.2; }
+  .complete-sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.5; font-weight: 600; }
+
+  .score-display {
+    background: linear-gradient(135deg, var(--primary-dim), rgba(249,115,22,0.08));
+    border-radius: 16px;
+    padding: 1.4rem;
+    margin-bottom: 1rem;
+    border: 2px solid rgba(245,158,11,0.2);
+  }
+  .score-big { font-size: 3.2rem; font-weight: 900; color: var(--primary-dark); line-height: 1; margin-bottom: 0.2rem; }
+  .score-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; }
+
+  .breakdown { text-align: left; margin-bottom: 1.5rem; }
+  .breakdown-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.5rem 0; border-bottom: 1px solid #fef3c7;
+    font-size: 0.82rem;
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-topic { color: var(--muted); font-weight: 700; }
+  .breakdown-result { font-weight: 800; }
+  .green { color: var(--success); }
+  .red { color: var(--danger); }
+  .orange { color: var(--primary-dark); }
+
+  .milestone-banner {
+    background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(249,115,22,0.08));
+    border: 2px solid rgba(245,158,11,0.3);
+    border-radius: 14px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+  .milestone-banner.show { display: block; }
+  .milestone-emoji { font-size: 1.8rem; margin-bottom: 0.3rem; }
+  .milestone-text { font-size: 0.88rem; color: var(--primary-dark); font-weight: 800; line-height: 1.4; }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-name">Fact <span>Attack!</span> ⚡</div>
+  <div class="streak-chip">🔥 <span id="streakCount">0</span> day streak</div>
+</div>
+
+<div class="card" id="mainCard">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+  <!-- HOME -->
+  <div class="screen active" id="screenHome">
+    <div class="home-inner">
+      <div class="round-badge">⚡ Ready to go!</div>
+      <div class="home-title">Round <span id="homeRoundNum">1</span></div>
+      <div class="home-sub" id="homeSub">8 questions. One from every topic.<br>All the facts. Let's go.</div>
+
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-val amber" id="statRounds">0</div>
+          <div class="stat-label">Rounds</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statAccuracy">—</div>
+          <div class="stat-label">Accuracy</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statStreak">0</div>
+          <div class="stat-label">Day streak 🔥</div>
+        </div>
+      </div>
+
+      <div class="topic-list" id="topicList" style="display:none">
+        <div class="topic-list-label">Topic scores</div>
+        <div id="topicRows"></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="startRound()">Start Round <span id="startRoundNum">1</span> →</button>
+      <button class="btn btn-ghost" id="anotherRoundBtn" style="display:none" onclick="startRound()">Go again! ↺</button>
+    </div>
+  </div>
+
+  <!-- QUESTION -->
+  <div class="screen" id="screenQuestion">
+    <div class="q-meta">
+      <span class="q-type-chip" id="qTypeChip">🌍 Geography</span>
+      <span class="q-counter" id="qCounter">1 / 8</span>
+    </div>
+    <div class="q-body">
+      <div class="q-text" id="qText">Loading...</div>
+      <div class="options" id="optionsWrap"></div>
+    </div>
+    <div class="feedback-box" id="feedbackBox">
+      <div class="feedback-result" id="feedbackResult"></div>
+      <div class="feedback-explain" id="feedbackExplain"></div>
+    </div>
+    <div class="fact-card" id="factCard">
+      <div class="fact-card-header" id="factCardHeader">
+        <div class="fact-card-emoji" id="factCardEmoji">🌍</div>
+        <div class="fact-card-title" id="factCardTitle">Fun Facts</div>
+      </div>
+      <div class="fact-card-body" id="factCardBody"></div>
+    </div>
+    <button class="btn-next" id="btnNext" onclick="nextQuestion()">Next ⚡</button>
+  </div>
+
+  <!-- ROUND COMPLETE -->
+  <div class="screen" id="screenComplete">
+    <div class="complete-inner">
+      <div class="complete-icon" id="completeIcon">🎯</div>
+      <div class="complete-round" id="completeRoundLabel">Round 1 complete!</div>
+      <div class="complete-title" id="completeTitle">Amazing!</div>
+      <div class="complete-sub" id="completeSub"></div>
+
+      <div class="milestone-banner" id="milestoneBanner">
+        <div class="milestone-emoji" id="milestoneEmoji">🏆</div>
+        <div class="milestone-text" id="milestoneText"></div>
+      </div>
+
+      <div class="score-display">
+        <div class="score-big" id="scoreBig">8/8</div>
+        <div class="score-label">Questions correct</div>
+      </div>
+
+      <div class="breakdown" id="breakdownWrap"></div>
+
+      <button class="btn btn-primary" onclick="goAnotherRound()">Go again! ↺</button>
+      <button class="btn btn-ghost" onclick="goHome()">Back to home</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Topic colours (Top Trumps style) ──
+const TOPIC_STYLES = {
+  'Country Sizes':     { color: '#3b82f6', emoji: '🌍' },
+  'Population':        { color: '#10b981', emoji: '👥' },
+  'Capitals':          { color: '#8b5cf6', emoji: '🏛️' },
+  'Landmarks':         { color: '#f59e0b', emoji: '🏰' },
+  'What Countries Make': { color: '#ec4899', emoji: '📦' },
+  'Periodic Table':    { color: '#06b6d4', emoji: '⚗️' },
+  'Romans':            { color: '#ef4444', emoji: '⚔️' },
+  'Science':           { color: '#6366f1', emoji: '🔬' },
+};
+
+// ── Question Bank ──
+const QUESTIONS = [
+
+  // ── COUNTRY SIZES ──
+  {
+    id: 1, topic: 'Country Sizes',
+    question: "What is the largest country in the world by land area?",
+    correct: "Russia 🇷🇺", wrong: ["Canada 🇨🇦", "USA 🇺🇸", "China 🇨🇳"],
+    explanation: "Russia is HUGE — about 17 million square kilometres. You could fit the whole of New Zealand into Russia over 150 times!",
+    fun_facts: ["Russia is so big it has 11 different time zones 🕐", "Russia stretches across both Europe and Asia", "The second biggest country is Canada, then the USA"]
+  },
+  {
+    id: 2, topic: 'Country Sizes',
+    question: "Which is bigger: Brazil or Australia?",
+    correct: "Brazil 🇧🇷", wrong: ["Australia 🇦🇺", "They're exactly the same", "India 🇮🇳"],
+    explanation: "Brazil wins! It's about 8.5 million km² vs Australia's 7.7 million km². Close, but Brazil is bigger.",
+    fun_facts: ["Australia is the only country that is also a whole continent 🦘", "Brazil has the world's biggest rainforest — the Amazon!", "Brazil is bigger than Australia but has way more people"]
+  },
+  {
+    id: 3, topic: 'Country Sizes',
+    question: "New Zealand has two main islands. What are they called?",
+    correct: "North Island and South Island", wrong: ["East Island and West Island", "Big Island and Small Island", "Upper Island and Lower Island"],
+    explanation: "Simple! The North Island (where Auckland is) and the South Island. Very straight-forward naming by the early settlers!",
+    fun_facts: ["NZ also has over 600 smaller islands 🏝️", "The South Island is actually bigger than the North Island!", "Stewart Island is New Zealand's third-biggest island"]
+  },
+
+  // ── POPULATION ──
+  {
+    id: 4, topic: 'Population',
+    question: "Which country has the MOST people in the world?",
+    correct: "India 🇮🇳", wrong: ["China 🇨🇳", "USA 🇺🇸", "Indonesia 🇮🇩"],
+    explanation: "India passed China in 2023 to become the world's most populous country, with over 1.4 billion people!",
+    fun_facts: ["India adds about 1 million people every 2 weeks 👶", "1 in 6 people on Earth lives in India!", "China had strict rules for many years to limit population growth"]
+  },
+  {
+    id: 5, topic: 'Population',
+    question: "About how many people live in New Zealand?",
+    correct: "About 5 million", wrong: ["About 1 million", "About 20 million", "About 50 million"],
+    explanation: "NZ has about 5 million people — roughly the same number as a medium-sized city like Singapore!",
+    fun_facts: ["NZ has about 5 sheep for every person 🐑", "About 1 in 4 New Zealanders was born in another country", "Auckland alone has about 1.7 million people — a third of NZ!"]
+  },
+  {
+    id: 6, topic: 'Population',
+    question: "Which country is the world's smallest by population?",
+    correct: "Vatican City 🇻🇦", wrong: ["Iceland 🇮🇸", "San Marino 🇸🇲", "Fiji 🇫🇯"],
+    explanation: "Vatican City is a tiny country inside Rome, Italy. It has only about 800 people — but it's an officially recognised country!",
+    fun_facts: ["Vatican City is also the world's smallest country by size 🏛️", "It has its own post office, radio station, and army (the Swiss Guard)", "The Pope lives there!"]
+  },
+
+  // ── CAPITALS ──
+  {
+    id: 7, topic: 'Capitals',
+    question: "What is the capital of Australia?",
+    correct: "Canberra", wrong: ["Sydney", "Melbourne", "Brisbane"],
+    explanation: "Not Sydney! Canberra was built specially to be the capital because Sydney and Melbourne couldn't agree on which city should win.",
+    fun_facts: ["Canberra was purpose-built and officially opened in 1913 🏗️", "The name Canberra comes from an Aboriginal word meaning 'meeting place'", "Sydney is the biggest city, but NOT the capital"]
+  },
+  {
+    id: 8, topic: 'Capitals',
+    question: "What is the capital of Japan?",
+    correct: "Tokyo", wrong: ["Osaka", "Kyoto", "Hiroshima"],
+    explanation: "Tokyo! It's not only Japan's capital but one of the biggest cities on Earth, with about 14 million people in the city itself.",
+    fun_facts: ["Tokyo hosted the Summer Olympics in 1964 and 2020 🏅", "Japan has bullet trains that travel over 300km/h!", "Tokyo has more Michelin-starred restaurants than any other city in the world"]
+  },
+  {
+    id: 9, topic: 'Capitals',
+    question: "What is the capital of Brazil?",
+    correct: "Brasília", wrong: ["São Paulo", "Rio de Janeiro", "Salvador"],
+    explanation: "Not Rio! Brazil moved its capital to the brand-new city of Brasília in 1960. It was built from scratch in just 41 months.",
+    fun_facts: ["Brasília was built in the middle of the country so the capital was more central 🗺️", "Rio de Janeiro was the old capital for over 100 years", "Brasília was designed to look like an aeroplane from the air!"]
+  },
+
+  // ── LANDMARKS ──
+  {
+    id: 10, topic: 'Landmarks',
+    question: "Roughly how tall is the Eiffel Tower in Paris?",
+    correct: "About 330 metres", wrong: ["About 100 metres", "About 600 metres", "About 50 metres"],
+    explanation: "The Eiffel Tower is about 330 metres tall including its antenna. It was the world's tallest structure for 41 years!",
+    fun_facts: ["The Eiffel Tower was built in 1889 for the World's Fair 🗼", "It was supposed to be temporary but was never taken down!", "7 million people visit it every year — more than any other paid monument in the world"]
+  },
+  {
+    id: 11, topic: 'Landmarks',
+    question: "Where is the Colosseum?",
+    correct: "Rome, Italy 🇮🇹", wrong: ["Athens, Greece 🇬🇷", "Cairo, Egypt 🇪🇬", "Istanbul, Turkey 🇹🇷"],
+    explanation: "The Colosseum is in Rome! It was built about 2,000 years ago and could hold up to 80,000 spectators.",
+    fun_facts: ["The Colosseum hosted gladiator fights and wild animal hunts ⚔️", "It was also flooded for mock naval battles!", "About 4 million people visit it every year"]
+  },
+  {
+    id: 12, topic: 'Landmarks',
+    question: "Which is taller: the Burj Khalifa or the CN Tower?",
+    correct: "Burj Khalifa 🇦🇪", wrong: ["CN Tower 🇨🇦", "They're the same height", "CN Tower by just a tiny bit"],
+    explanation: "The Burj Khalifa in Dubai is 828 metres — much taller than the CN Tower in Canada which is 553 metres.",
+    fun_facts: ["The Burj Khalifa is the world's tallest building 🏙️", "It has 163 floors and took 6 years to build", "On a clear day you can see it from 95 kilometres away!"]
+  },
+
+  // ── WHAT COUNTRIES MAKE ──
+  {
+    id: 13, topic: 'What Countries Make',
+    question: "Madagascar produces about 80% of the world's supply of what flavouring?",
+    correct: "Vanilla 🍦", wrong: ["Coffee ☕", "Chocolate 🍫", "Cinnamon 🫙"],
+    explanation: "Madagascar grows most of the world's vanilla! You've definitely eaten some — it's in ice cream, cakes, and biscuits.",
+    fun_facts: ["Vanilla comes from an orchid flower 🌸", "Real vanilla is very expensive — some pods cost more than silver!", "Madagascar is a large island off the east coast of Africa"]
+  },
+  {
+    id: 14, topic: 'What Countries Make',
+    question: "New Zealand is one of the world's biggest exporters of what?",
+    correct: "Dairy — milk and cheese 🥛", wrong: ["Cars 🚗", "Oil 🛢️", "Electronics 💻"],
+    explanation: "NZ's cows are super productive! We export huge amounts of milk powder, butter, and cheese to countries all around the world.",
+    fun_facts: ["NZ has about 5 million dairy cows — one for every person! 🐄", "NZ dairy goes to over 130 different countries", "Fonterra is NZ's biggest company and it's all about dairy"]
+  },
+  {
+    id: 15, topic: 'What Countries Make',
+    question: "Which country exports the most oil in the world?",
+    correct: "Saudi Arabia 🇸🇦", wrong: ["USA 🇺🇸", "Russia 🇷🇺", "Nigeria 🇳🇬"],
+    explanation: "Saudi Arabia sits on massive underground oil reserves and exports more crude oil than any other country in the world.",
+    fun_facts: ["Oil was discovered in Saudi Arabia in 1938 🏜️", "Saudi Arabia is in the Middle East — a hot desert country", "Saudi Arabia's oil company Aramco is one of the most valuable companies ever"]
+  },
+
+  // ── PERIODIC TABLE ──
+  {
+    id: 16, topic: 'Periodic Table',
+    question: "What element does 'H' stand for on the periodic table?",
+    correct: "Hydrogen", wrong: ["Helium", "Hafnium", "Hassium"],
+    explanation: "H is Hydrogen — the lightest and most abundant element in the whole universe! Stars (including our Sun) are mostly made of hydrogen.",
+    fun_facts: ["Hydrogen makes up about 75% of all matter in the universe 🌟", "When hydrogen burns, it produces water — H₂O!", "Hydrogen is used as rocket fuel 🚀"]
+  },
+  {
+    id: 17, topic: 'Periodic Table',
+    question: "What does 'O' stand for on the periodic table?",
+    correct: "Oxygen", wrong: ["Osmium", "Oganesson", "Ozorium"],
+    explanation: "O is Oxygen! About 21% of the air we breathe is oxygen. Without it, we couldn't survive for more than a few minutes.",
+    fun_facts: ["Oxygen was discovered in 1774 by scientist Joseph Priestley 🧪", "Rust happens when iron reacts with oxygen", "Oxygen makes up about 46% of Earth's crust by weight"]
+  },
+  {
+    id: 18, topic: 'Periodic Table',
+    question: "What is the chemical symbol for Gold on the periodic table?",
+    correct: "Au", wrong: ["Go", "Gd", "Gl"],
+    explanation: "Gold's symbol is Au — from the Latin word 'Aurum'. That's why it's not just 'G'! Scientists use old Latin names for many elements.",
+    fun_facts: ["Gold is one of the only metals with a yellow colour 🥇", "Gold doesn't rust or tarnish — it stays shiny forever", "All the gold ever mined in history would fit into about 3.5 Olympic swimming pools"]
+  },
+
+  // ── ROMANS ──
+  {
+    id: 19, topic: 'Romans',
+    question: "What language did the Romans speak?",
+    correct: "Latin", wrong: ["Greek", "Italian", "French"],
+    explanation: "The Romans spoke Latin! It's the root of many modern languages including Italian, Spanish, French, and even loads of English words.",
+    fun_facts: ["Latin is still used in science — every animal species has a Latin name 🔬", "Many English words come from Latin, like 'aqua' (water) and 'terra' (earth)", "Doctors and lawyers still use Latin phrases today!"]
+  },
+  {
+    id: 20, topic: 'Romans',
+    question: "What were Roman soldiers called?",
+    correct: "Legionaries", wrong: ["Centurions", "Gladiators", "Tribunes"],
+    explanation: "Roman soldiers were called legionaries! A centurion was an officer (in charge of 80 soldiers). Gladiators were arena fighters — very different from regular soldiers.",
+    fun_facts: ["A Roman legion had about 5,000 soldiers ⚔️", "Roman soldiers marched up to 30km a day in full armour!", "They built roads, bridges, and forts everywhere they went"]
+  },
+  {
+    id: 21, topic: 'Romans',
+    question: "What massive oval building did the Romans build for gladiator contests?",
+    correct: "The Colosseum", wrong: ["The Pantheon", "The Forum", "The Circus Maximus"],
+    explanation: "The Colosseum! Finished around 80 AD, it held up to 80,000 spectators and hosted gladiator contests, animal hunts, and even mock sea battles.",
+    fun_facts: ["The Colosseum has stood for nearly 2,000 years 🏛️", "It was damaged by earthquakes but is still standing today", "Gladiators were like ancient celebrities — some were very famous!"]
+  },
+
+  // ── SCIENCE ──
+  {
+    id: 22, topic: 'Science',
+    question: "Which is denser — a piece of lead metal or a piece of wood the same size?",
+    correct: "Lead 🔩", wrong: ["Wood 🪵", "They're about the same", "It depends on the temperature"],
+    explanation: "Lead is MUCH denser than wood! Density means how much stuff is packed into a space. Lead has lots packed in — that's why it's so heavy for its size.",
+    fun_facts: ["Lead is about 11 times denser than water 💧", "Density explains why some things float and others sink", "Styrofoam floats because it's mostly air — very low density!"]
+  },
+  {
+    id: 23, topic: 'Science',
+    question: "A rubber band springs back after you stretch it. What is this property called?",
+    correct: "Elasticity", wrong: ["Density", "Gravity", "Friction"],
+    explanation: "Elasticity! Materials that spring back to their original shape after being stretched or squashed are elastic. Rubber is super elastic.",
+    fun_facts: ["Not all materials are elastic — clay STAYS stretched 🏺", "A basketball is elastic — that's why it bounces!", "Your skin is elastic too — try pinching it gently and letting go"]
+  },
+  {
+    id: 24, topic: 'Science',
+    question: "If you drop a heavy bowling ball and a light tennis ball from the same height, what happens?",
+    correct: "They hit the ground at the same time", wrong: ["The bowling ball lands first", "The tennis ball lands first", "It depends on the colour"],
+    explanation: "They land together! Gravity pulls all objects at exactly the same rate, no matter how heavy they are. Galileo proved this about 400 years ago.",
+    fun_facts: ["Galileo is said to have tested this from the Leaning Tower of Pisa 🗼", "Air resistance can change this — a feather falls slower because of air, not because it's light", "Apollo astronauts proved it on the Moon — a hammer and feather fell at exactly the same rate!"]
+  },
+];
+
+// ── State ──
+let state = {
+  round: 0,
+  sessionQueue: [],
+  currentIdx: 0,
+  sessionCorrect: 0,
+  sessionResults: [],
+  allTimeCorrect: 0,
+  allTimeAnswered: 0,
+  topicStats: {},
+  streak: 0,
+  lastPlayed: null,
+};
+
+function loadState() {
+  const saved = localStorage.getItem('fa_state');
+  if (saved) { try { state = { ...state, ...JSON.parse(saved) }; } catch(e) {} }
+}
+function saveState() { localStorage.setItem('fa_state', JSON.stringify(state)); }
+
+// ── Round setup: one question from each topic ──
+function buildRound() {
+  const topics = [...new Set(QUESTIONS.map(q => q.topic))];
+  const round = [];
+  topics.forEach(topic => {
+    const topicQs = QUESTIONS.filter(q => q.topic === topic);
+    round.push(topicQs[Math.floor(Math.random() * topicQs.length)]);
+  });
+  return round.sort(() => Math.random() - 0.5);
+}
+
+function startRound() {
+  state.round++;
+  state.sessionQueue = buildRound();
+  state.currentIdx = 0;
+  state.sessionCorrect = 0;
+  state.sessionResults = [];
+  saveState();
+  showScreen('screenQuestion');
+  renderQuestion();
+}
+
+// ── Rendering ──
+function renderQuestion() {
+  const q = state.sessionQueue[state.currentIdx];
+  const total = state.sessionQueue.length;
+  const pct = (state.currentIdx / total) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('qCounter').textContent = `${state.currentIdx + 1} / ${total}`;
+
+  const style = TOPIC_STYLES[q.topic] || { color: '#f59e0b', emoji: '⭐' };
+  const chip = document.getElementById('qTypeChip');
+  chip.textContent = style.emoji + ' ' + q.topic;
+  chip.style.background = style.color + '18';
+  chip.style.color = style.color;
+  chip.style.border = `2px solid ${style.color}30`;
+
+  document.getElementById('qText').textContent = q.question;
+
+  const opts = [q.correct, ...q.wrong].sort(() => Math.random() - 0.5);
+  const wrap = document.getElementById('optionsWrap');
+  wrap.innerHTML = '';
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = opt;
+    btn.onclick = () => selectAnswer(btn, opt, q);
+    wrap.appendChild(btn);
+  });
+
+  document.getElementById('feedbackBox').className = 'feedback-box';
+  document.getElementById('factCard').className = 'fact-card';
+  document.getElementById('btnNext').className = 'btn-next';
+}
+
+function selectAnswer(btn, selected, q) {
+  document.querySelectorAll('.option').forEach(b => b.classList.add('disabled'));
+  const correct = selected === q.correct;
+
+  if (correct) {
+    btn.classList.add('correct');
+    state.sessionCorrect++;
+    state.allTimeCorrect++;
+  } else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('.option').forEach(b => {
+      if (b.textContent === q.correct) b.classList.add('reveal');
+    });
+  }
+  state.allTimeAnswered++;
+
+  if (!state.topicStats[q.topic]) state.topicStats[q.topic] = { correct: 0, total: 0 };
+  state.topicStats[q.topic].total++;
+  if (correct) state.topicStats[q.topic].correct++;
+
+  state.sessionResults.push({ topic: q.topic, correct });
+
+  // Show feedback
+  const fb = document.getElementById('feedbackBox');
+  fb.className = 'feedback-box show ' + (correct ? 'correct' : 'wrong');
+  document.getElementById('feedbackResult').textContent = correct ? '✓ Correct! 🎉' : '✗ Not quite!';
+  document.getElementById('feedbackExplain').textContent = q.explanation;
+
+  // Show Fun Fact card (Top Trumps style)
+  const style = TOPIC_STYLES[q.topic] || { color: '#f59e0b', emoji: '⭐' };
+  const card = document.getElementById('factCard');
+  document.getElementById('factCardHeader').style.background = style.color;
+  document.getElementById('factCardEmoji').textContent = style.emoji;
+  document.getElementById('factCardTitle').textContent = q.topic.toUpperCase() + ' — FUN FACTS';
+  const body = document.getElementById('factCardBody');
+  body.innerHTML = q.fun_facts.map(f => `
+    <div class="fact-item">
+      <span class="fact-bullet">✦</span>
+      <span>${f}</span>
+    </div>
+  `).join('');
+  card.className = 'fact-card show';
+
+  document.getElementById('btnNext').className = 'btn-next show';
+  saveState();
+}
+
+function nextQuestion() {
+  state.currentIdx++;
+  if (state.currentIdx >= state.sessionQueue.length) {
+    endRound();
+  } else {
+    renderQuestion();
+  }
+}
+
+function endRound() {
+  // Check streak
+  const today = new Date().toDateString();
+  if (state.lastPlayed !== today) {
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    state.streak = (state.lastPlayed === yesterday) ? state.streak + 1 : 1;
+    state.lastPlayed = today;
+  }
+  saveState();
+
+  document.getElementById('progressFill').style.width = '100%';
+  showScreen('screenComplete');
+
+  const total = state.sessionResults.length;
+  const correct = state.sessionResults.filter(r => r.correct).length;
+  const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+  document.getElementById('completeRoundLabel').textContent = `Round ${state.round} complete! 🎉`;
+  document.getElementById('scoreBig').textContent = `${correct}/${total}`;
+
+  const msgs = [
+    [100, '🌟', 'PERFECT!', 'Every single one. You are a FACT MACHINE!'],
+    [87,  '🏆', 'Amazing!', "That's really impressive. Nearly perfect!"],
+    [75,  '🎯', 'Brilliant!', "Strong round. You're building up a great fact bank!"],
+    [60,  '💪', 'Good effort!', "More than half right. Keep going — it gets easier!"],
+    [0,   '📚', 'Keep learning!', "Tricky round! Read the fun facts and you'll smash it next time."]
+  ];
+  const [, icon, title, sub] = msgs.find(([threshold]) => pct >= threshold);
+  document.getElementById('completeIcon').textContent = icon;
+  document.getElementById('completeTitle').textContent = title;
+  document.getElementById('completeSub').textContent = sub;
+
+  // Breakdown by topic
+  const breakdown = document.getElementById('breakdownWrap');
+  const byTopic = {};
+  state.sessionResults.forEach(r => {
+    if (!byTopic[r.topic]) byTopic[r.topic] = { correct: 0, total: 0 };
+    byTopic[r.topic].total++;
+    if (r.correct) byTopic[r.topic].correct++;
+  });
+  breakdown.innerHTML = '';
+  Object.entries(byTopic).forEach(([topic, data]) => {
+    const topicPct = Math.round((data.correct / data.total) * 100);
+    const cls = topicPct === 100 ? 'green' : topicPct >= 50 ? 'orange' : 'red';
+    const style = TOPIC_STYLES[topic] || { emoji: '⭐' };
+    const row = document.createElement('div');
+    row.className = 'breakdown-row';
+    row.innerHTML = `
+      <span class="breakdown-topic">${style.emoji} ${topic}</span>
+      <span class="breakdown-result ${cls}">${data.correct}/${data.total}</span>
+    `;
+    breakdown.appendChild(row);
+  });
+
+  // Milestones
+  const milestones = {
+    5:  ['⚡', "5 rounds in! You're a fact machine!"],
+    10: ['🧠', "Round 10! MEGA BRAIN activated."],
+    20: ['🏆', "Round 20! You could WIN a quiz show."],
+    50: ['🚀', "50 rounds! You basically know EVERYTHING."]
+  };
+  const m = milestones[state.round];
+  if (m) {
+    document.getElementById('milestoneEmoji').textContent = m[0];
+    document.getElementById('milestoneText').textContent = m[1];
+    document.getElementById('milestoneBanner').classList.add('show');
+  } else {
+    document.getElementById('milestoneBanner').classList.remove('show');
+  }
+}
+
+function goAnotherRound() { startRound(); }
+function goHome() { showScreen('screenHome'); updateHomeScreen(); }
+
+function updateHomeScreen() {
+  const roundNum = state.round + 1;
+  document.getElementById('homeRoundNum').textContent = roundNum;
+  document.getElementById('startRoundNum').textContent = roundNum;
+  document.getElementById('statRounds').textContent = state.round;
+  document.getElementById('statStreak').textContent = state.streak;
+
+  if (state.allTimeAnswered > 0) {
+    document.getElementById('statAccuracy').textContent =
+      Math.round((state.allTimeCorrect / state.allTimeAnswered) * 100) + '%';
+  }
+
+  if (state.round > 0) {
+    document.getElementById('homeSub').textContent = `Round ${roundNum} ready. Keep that streak going!`;
+    document.getElementById('anotherRoundBtn').style.display = 'block';
+  }
+
+  const topics = Object.entries(state.topicStats);
+  if (topics.length > 0) {
+    document.getElementById('topicList').style.display = 'block';
+    const rows = document.getElementById('topicRows');
+    rows.innerHTML = '';
+    topics.sort((a, b) => (b[1].correct / b[1].total) - (a[1].correct / a[1].total));
+    topics.forEach(([topic, data]) => {
+      const pct = Math.round((data.correct / data.total) * 100);
+      const color = pct >= 80 ? '#10b981' : pct >= 60 ? '#f59e0b' : '#ef4444';
+      const style = TOPIC_STYLES[topic] || { emoji: '⭐' };
+      const row = document.createElement('div');
+      row.className = 'topic-row';
+      row.innerHTML = `
+        <span class="topic-name">${style.emoji} ${topic}</span>
+        <div class="topic-bar-wrap"><div class="topic-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <span class="topic-pct">${pct}%</span>
+      `;
+      rows.appendChild(row);
+    });
+  }
+
+  document.getElementById('streakCount').textContent = state.streak;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('mainCard').style.animation = 'none';
+  document.getElementById('mainCard').offsetHeight; // reflow
+  document.getElementById('mainCard').style.animation = '';
+}
+
+// ── Init ──
+loadState();
+updateHomeScreen();
+</script>
+</body>
+</html>
