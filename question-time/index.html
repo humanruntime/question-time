@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Question Time</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #f5f6fa;
+    --surface: #ffffff;
+    --border: #e8eaf0;
+    --text: #12132a;
+    --muted: #7c7f99;
+    --primary: #2952e3;
+    --primary-dim: rgba(41,82,227,0.08);
+    --success: #1a9e5c;
+    --success-dim: rgba(26,158,92,0.1);
+    --danger: #d63e3e;
+    --danger-dim: rgba(214,62,62,0.08);
+    --gold: #c8940a;
+    --gold-dim: rgba(200,148,10,0.1);
+    --debate: #7c3aed;
+    --debate-dim: rgba(124,58,237,0.08);
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.07);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0 40px;
+  }
+
+  /* ── Header ── */
+  .app-header {
+    width: 100%;
+    max-width: 520px;
+    padding: 1.2rem 1.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .app-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .app-name span { color: var(--primary); }
+  .streak-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gold);
+    background: var(--gold-dim);
+    border: 1px solid rgba(200,148,10,0.2);
+    border-radius: 20px;
+    padding: 0.3rem 0.75rem;
+  }
+
+  /* ── Main card ── */
+  .card {
+    width: 100%;
+    max-width: 520px;
+    margin: 1.2rem 1rem 0;
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Progress bar ── */
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    width: 100%;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--primary);
+    transition: width 0.4s ease;
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* ── Screens ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* HOME */
+  .home-inner {
+    padding: 2rem 1.75rem 2rem;
+    text-align: center;
+  }
+  .round-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--primary);
+    background: var(--primary-dim);
+    border-radius: 20px;
+    padding: 0.3rem 0.85rem;
+    margin-bottom: 1rem;
+  }
+  .home-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.9rem;
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+  .home-sub {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 1.75rem;
+    line-height: 1.5;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.75rem;
+  }
+  .stat-box {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 0.85rem 0.5rem;
+    text-align: center;
+  }
+  .stat-val {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+  .stat-val.gold { color: var(--gold); }
+  .stat-label {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .topic-list {
+    text-align: left;
+    margin-bottom: 1.75rem;
+  }
+  .topic-list-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+  }
+  .topic-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .topic-row:last-child { border-bottom: none; }
+  .topic-name { font-size: 0.78rem; color: var(--text); flex: 1; }
+  .topic-bar-wrap { width: 80px; height: 5px; background: var(--border); border-radius: 3px; }
+  .topic-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+  .topic-pct { font-size: 0.7rem; font-weight: 600; color: var(--muted); width: 32px; text-align: right; }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    text-align: center;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 16px rgba(41,82,227,0.3); }
+  .btn-primary:hover { box-shadow: 0 6px 20px rgba(41,82,227,0.4); }
+  .btn-ghost { background: var(--bg); color: var(--primary); font-weight: 600; margin-top: 0.75rem; font-size: 0.85rem; padding: 0.7rem; }
+
+  /* QUESTION */
+  .q-meta {
+    padding: 1.25rem 1.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .q-type-chip {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+  }
+  .chip-facts { background: var(--primary-dim); color: var(--primary); }
+  .chip-policy { background: var(--debate-dim); color: var(--debate); }
+  .chip-debate { background: rgba(124,58,237,0.1); color: #7c3aed; }
+  .q-counter { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+
+  .q-body { padding: 1.1rem 1.5rem 1.4rem; }
+  .q-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.25rem;
+    line-height: 1.4;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 0.6rem; }
+  .option {
+    display: block;
+    width: 100%;
+    padding: 0.9rem 1.1rem;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    line-height: 1.4;
+  }
+  .option:hover { border-color: var(--primary); background: var(--primary-dim); }
+  .option.correct { border-color: var(--success); background: var(--success-dim); color: var(--success); font-weight: 700; }
+  .option.wrong { border-color: var(--danger); background: var(--danger-dim); color: var(--danger); }
+  .option.disabled { cursor: default; pointer-events: none; }
+  .option.reveal { border-color: var(--success); background: var(--success-dim); }
+
+  /* FEEDBACK */
+  .feedback-box {
+    margin: 0 1.5rem 1.5rem;
+    padding: 1rem 1.1rem;
+    border-radius: 12px;
+    display: none;
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .feedback-box.show { display: block; }
+  .feedback-box.correct { background: var(--success-dim); border: 1px solid rgba(26,158,92,0.25); }
+  .feedback-box.wrong { background: var(--danger-dim); border: 1px solid rgba(214,62,62,0.2); }
+  .feedback-result {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+  }
+  .feedback-box.correct .feedback-result { color: var(--success); }
+  .feedback-box.wrong .feedback-result { color: var(--danger); }
+  .feedback-explain { font-size: 0.8rem; color: var(--text); line-height: 1.55; }
+  .feedback-source { font-size: 0.7rem; color: var(--muted); margin-top: 0.35rem; }
+  .feedback-source a { color: var(--primary); text-decoration: none; }
+
+  .btn-next {
+    display: block;
+    width: calc(100% - 3rem);
+    margin: 0 1.5rem 1.5rem;
+    padding: 0.9rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: none;
+    transition: transform 0.1s;
+  }
+  .btn-next:active { transform: scale(0.98); }
+  .btn-next.show { display: block; }
+
+  /* DEBATE PREP */
+  .debate-inner { padding: 1.5rem; }
+  .debate-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--debate);
+    margin-bottom: 0.75rem;
+  }
+  .debate-question {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+    line-height: 1.4;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+  }
+  .debate-hint {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+  .debate-answer-wrap { margin-bottom: 1rem; }
+  .debate-answer-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+  .debate-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 0.85rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    color: var(--text);
+    background: var(--bg);
+    resize: vertical;
+    transition: border-color 0.15s;
+    line-height: 1.5;
+  }
+  .debate-textarea:focus { outline: none; border-color: var(--debate); background: white; }
+  .debate-textarea::placeholder { color: var(--muted); }
+  .debate-textarea:disabled { opacity: 0.6; cursor: default; }
+  .debate-submitted-note {
+    font-size: 0.72rem;
+    color: var(--success);
+    font-weight: 600;
+    margin-top: 0.4rem;
+    display: none;
+  }
+  .debate-submitted-note.show { display: block; }
+  .btn-see-answer {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    background: rgba(124,58,237,0.1);
+    color: var(--debate);
+    border: 2px solid rgba(124,58,237,0.25);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-bottom: 0.75rem;
+  }
+  .btn-see-answer:hover { background: rgba(124,58,237,0.15); }
+
+  .model-answer {
+    background: rgba(124,58,237,0.06);
+    border: 1px solid rgba(124,58,237,0.2);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1rem;
+    display: none;
+    animation: fadeIn 0.25s ease;
+  }
+  .model-answer.show { display: block; }
+  .model-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--debate);
+    margin-bottom: 0.5rem;
+  }
+  .model-text { font-size: 0.83rem; color: var(--text); line-height: 1.6; }
+
+  .self-assess {
+    display: none;
+    gap: 0.6rem;
+  }
+  .self-assess.show { display: flex; }
+  .btn-assess {
+    flex: 1;
+    padding: 0.8rem;
+    border-radius: 12px;
+    border: 2px solid;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .btn-assess:active { transform: scale(0.97); }
+  .btn-got-it { background: var(--success-dim); border-color: rgba(26,158,92,0.3); color: var(--success); }
+  .btn-needs-work { background: var(--danger-dim); border-color: rgba(214,62,62,0.2); color: var(--danger); }
+
+  /* ROUND COMPLETE */
+  .complete-inner {
+    padding: 2rem 1.75rem;
+    text-align: center;
+  }
+  .complete-icon { font-size: 3rem; margin-bottom: 0.75rem; line-height: 1; }
+  .complete-round {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+  }
+  .complete-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+  }
+  .complete-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.5; }
+
+  .score-display {
+    background: var(--bg);
+    border-radius: 14px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .score-big {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+  .score-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+
+  .breakdown { text-align: left; margin-bottom: 1.5rem; }
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-topic { color: var(--muted); }
+  .breakdown-result { font-weight: 600; }
+  .green { color: var(--success); }
+  .red { color: var(--danger); }
+  .purple { color: var(--debate); }
+
+  .milestone-banner {
+    background: linear-gradient(135deg, var(--gold-dim), rgba(200,148,10,0.05));
+    border: 1px solid rgba(200,148,10,0.25);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+  .milestone-banner.show { display: block; }
+  .milestone-emoji { font-size: 1.5rem; margin-bottom: 0.3rem; }
+  .milestone-text { font-size: 0.82rem; color: var(--gold); font-weight: 600; line-height: 1.4; }
+
+  /* Debate readiness bar */
+  .readiness-wrap {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+    text-align: left;
+  }
+  .readiness-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--debate);
+    margin-bottom: 0.5rem;
+  }
+  .readiness-bar-wrap { height: 8px; background: var(--border); border-radius: 4px; margin-bottom: 0.4rem; }
+  .readiness-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--debate), #a855f7); transition: width 0.6s ease; }
+  .readiness-pct { font-size: 0.75rem; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-name">Question <span>Time</span></div>
+  <div class="streak-chip" id="streakChip">🔥 <span id="streakCount">0</span> day streak</div>
+</div>
+
+<div class="card" id="mainCard">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+  <!-- HOME -->
+  <div class="screen active" id="screenHome">
+    <div class="home-inner">
+      <div class="round-badge">⚡ Next up</div>
+      <div class="home-title" id="homeTitle">Round <span id="homeRoundNum">1</span></div>
+      <div class="home-sub" id="homeSub">6 quick questions + 2 debate cards.<br>Takes about 4 minutes.</div>
+
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-val gold" id="statRounds">0</div>
+          <div class="stat-label">Rounds</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statAccuracy">—</div>
+          <div class="stat-label">Accuracy</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statDebate">—</div>
+          <div class="stat-label">Debate ready</div>
+        </div>
+      </div>
+
+      <div class="topic-list" id="topicList" style="display:none">
+        <div class="topic-list-label">Topic performance</div>
+        <div id="topicRows"></div>
+      </div>
+
+      <button class="btn btn-primary" onclick="startRound()">Start Round <span id="startRoundNum">1</span> →</button>
+      <button class="btn btn-ghost" id="anotherRoundBtn" style="display:none" onclick="startRound()">Go another round ↺</button>
+    </div>
+  </div>
+
+  <!-- QUESTION (Facts / Policy) -->
+  <div class="screen" id="screenQuestion">
+    <div class="q-meta">
+      <span class="q-type-chip" id="qTypeChip">Facts</span>
+      <span class="q-counter" id="qCounter">1 / 8</span>
+    </div>
+    <div class="q-body">
+      <div class="q-text" id="qText">Loading...</div>
+      <div class="options" id="optionsWrap"></div>
+    </div>
+    <div class="feedback-box" id="feedbackBox">
+      <div class="feedback-result" id="feedbackResult"></div>
+      <div class="feedback-explain" id="feedbackExplain"></div>
+      <div class="feedback-source" id="feedbackSource"></div>
+    </div>
+    <button class="btn-next" id="btnNext" onclick="nextQuestion()">Next →</button>
+  </div>
+
+  <!-- DEBATE PREP -->
+  <div class="screen" id="screenDebate">
+    <div class="debate-inner">
+      <div class="debate-label">🎤 Debate Prep</div>
+      <div class="q-text debate-question" id="debateText">Loading...</div>
+      <div class="debate-hint">Write your answer as you'd say it — doorstep, debate stage, journalist. Then see how it compares.</div>
+      <div class="debate-answer-wrap">
+        <div class="debate-answer-label">Your answer</div>
+        <textarea class="debate-textarea" id="debateTextarea" placeholder="Write your answer here…" rows="5"></textarea>
+        <div class="debate-submitted-note" id="debateSubmittedNote">✓ Saved for Sam's review</div>
+      </div>
+      <button class="btn-see-answer" id="btnSeeAnswer" onclick="submitAndShowAnswer()">Submit &amp; see model answer</button>
+      <div class="model-answer" id="modelAnswer">
+        <div class="model-label">Model response</div>
+        <div class="model-text" id="modelText"></div>
+      </div>
+      <div class="self-assess" id="selfAssess">
+        <button class="btn-assess btn-got-it" onclick="assessDebate('got_it')">✓ Got it</button>
+        <button class="btn-assess btn-needs-work" onclick="assessDebate('needs_work')">Needs work</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROUND COMPLETE -->
+  <div class="screen" id="screenComplete">
+    <div class="complete-inner">
+      <div class="complete-icon" id="completeIcon">🎯</div>
+      <div class="complete-round" id="completeRoundLabel">Round 1 complete</div>
+      <div class="complete-title" id="completeTitle">Solid round.</div>
+      <div class="complete-sub" id="completeSub"></div>
+
+      <div class="milestone-banner" id="milestoneBanner">
+        <div class="milestone-emoji" id="milestoneEmoji">🏆</div>
+        <div class="milestone-text" id="milestoneText"></div>
+      </div>
+
+      <div class="score-display">
+        <div class="score-big" id="scoreBig">6/6</div>
+        <div class="score-label">Facts &amp; Policy correct</div>
+      </div>
+
+      <div class="readiness-wrap">
+        <div class="readiness-label">Debate Readiness</div>
+        <div class="readiness-bar-wrap">
+          <div class="readiness-bar-fill" id="readinessBar" style="width:0%"></div>
+        </div>
+        <div class="readiness-pct" id="readinessPct">Tracking as you complete Debate Prep cards</div>
+      </div>
+
+      <div class="breakdown" id="breakdownWrap"></div>
+
+      <button class="btn btn-primary" onclick="goAnotherRound()">Go another round ↺</button>
+      <button class="btn btn-ghost" onclick="goHome()">Back to home</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Sample question bank (replace with Google Sheets load) ──
+const QUESTIONS = [
+  // FACTS
+  { id: 1, type: 'facts', topic: 'Economy', question: "What is New Zealand's approximate unemployment rate as of early 2026?", correct: "4.8%", wrong: ["2.1%", "7.3%", "9.0%"], explanation: "NZ unemployment was around 4.8% in early 2026, up from record lows of under 3% in 2022 as the economy cooled.", source: "Stats NZ", source_url: "https://www.stats.govt.nz" },
+  { id: 2, type: 'facts', topic: 'Economy', question: "What is the Reserve Bank of New Zealand's Official Cash Rate (OCR) most commonly used to control?", correct: "Inflation", wrong: ["Unemployment", "Government debt", "Exchange rates"], explanation: "The OCR is the RBNZ's primary tool for managing inflation — raising it makes borrowing more expensive, cooling spending and prices.", source: "Reserve Bank NZ", source_url: "https://www.rbnz.govt.nz" },
+  { id: 3, type: 'facts', topic: 'Housing', question: "Approximately how much has the median Auckland house price changed since its 2021 peak?", correct: "Fallen significantly — around 15–20%", wrong: ["Risen by 10%", "Stayed roughly the same", "Fallen by more than 40%"], explanation: "Auckland house prices fell roughly 15–20% from their late 2021 peak as interest rates rose sharply. Prices have since partially stabilised.", source: "CoreLogic NZ", source_url: "https://www.corelogic.co.nz" },
+  { id: 4, type: 'facts', topic: 'Tāmaki', question: "Glen Innes, Panmure, and Point England fall within which Auckland local board?", correct: "Ōrākei Local Board", wrong: ["Waitematā Local Board", "Albert-Eden Local Board", "Māngere-Ōtāhuhu Local Board"], explanation: "These suburbs are part of the Ōrākei Local Board area, which overlaps significantly with the Tāmaki electorate.", source: "Auckland Council", source_url: "https://www.aucklandcouncil.govt.nz" },
+  { id: 5, type: 'facts', topic: 'Health', question: "What is the approximate number of people on NZ elective surgery waiting lists as of 2025–26?", correct: "Around 70,000–80,000", wrong: ["Around 10,000", "Around 200,000", "Around 30,000"], explanation: "Elective surgery waiting lists grew significantly during and after COVID-19. The government has targeted reducing backlogs as a health priority.", source: "Health NZ", source_url: "https://www.tewhatuora.govt.nz" },
+  { id: 6, type: 'facts', topic: 'Economy', question: "What percentage of NZ government revenue comes from income tax (personal and corporate)?", correct: "Approximately 50–55%", wrong: ["Around 20%", "Around 80%", "Around 35%"], explanation: "Income taxes — personal and corporate combined — make up roughly half of government revenue, with GST contributing another large portion.", source: "NZ Treasury", source_url: "https://www.treasury.govt.nz" },
+
+  // POLICY
+  { id: 7, type: 'policy', topic: 'National Party', question: "Did the National-led government support or oppose the Fast-track Approvals Bill?", correct: "Supported — it was a National coalition initiative", wrong: ["Opposed it", "Abstained from the vote", "Referred it to select committee indefinitely"], explanation: "Fast-track Approvals was a key National coalition priority, designed to speed up consenting for infrastructure and housing projects.", source: "NZ Parliament", source_url: "https://www.parliament.nz" },
+  { id: 8, type: 'policy', topic: 'National Party', question: "Which portfolio does National hold that is most directly relevant to housing supply in Tāmaki?", correct: "Housing and RMA Reform", wrong: ["Finance", "Education", "Conservation"], explanation: "The Housing Minister and the Resource Management Act reform portfolio are central to National's plan to increase housing supply through planning reform.", source: "beehive.govt.nz", source_url: "https://www.beehive.govt.nz" },
+
+  // DEBATE PREP
+  { id: 9, type: 'debate', topic: 'BvV / ACT', question: "Brooke van Velden has just announced she's retiring from politics. A journalist asks: 'Do you think she did a good job as Tāmaki's MP?'", model_answer: "Acknowledge her service without being dismissive or sycophantic. Focus forward: 'Brooke worked hard for Tāmaki and I respect that. But elections are about the future, not the past. What I hear from people in Glen Innes and Panmure is that they want someone who understands the cost of living pressures they're facing right now — and that's exactly what I'll be focused on.' Pivot to your strengths without attacking her record.", source: "" },
+  { id: 10, type: 'debate', topic: 'Local Issues', question: "A voter on a doorstep in Glen Innes says: 'Nothing ever changes around here. Why should I bother voting?'", model_answer: "Don't argue. Acknowledge first, then make it personal: 'I hear that — and honestly, if I thought voting didn't matter, I wouldn't be standing. But I grew up seeing what happens when people who understand communities like this one don't have a seat at the table. Change is slow, but it's real, and your vote decides who's in the room when the decisions get made.' Ask if they're enrolled and have a QR code ready.", source: "" },
+];
+
+// ── State ──
+let state = {
+  round: 0,
+  sessionQueue: [],
+  currentIdx: 0,
+  sessionCorrect: 0,
+  sessionResults: [],
+  debateGotIt: 0,
+  debateTotal: 0,
+  allTimeCorrect: 0,
+  allTimeAnswered: 0,
+  topicStats: {},
+  streak: 0,
+  lastPlayed: null,
+};
+
+function loadState() {
+  const saved = localStorage.getItem('qt_state');
+  if (saved) {
+    try { state = { ...state, ...JSON.parse(saved) }; } catch(e) {}
+  }
+}
+function saveState() {
+  localStorage.setItem('qt_state', JSON.stringify(state));
+}
+
+// ── Round setup ──
+function buildRound() {
+  const facts = QUESTIONS.filter(q => q.type === 'facts' || q.type === 'policy');
+  const debate = QUESTIONS.filter(q => q.type === 'debate');
+  const shuffled = [...facts].sort(() => Math.random() - 0.5).slice(0, 6);
+  const debateCards = [...debate].sort(() => Math.random() - 0.5).slice(0, 2);
+  return [...shuffled, ...debateCards];
+}
+
+function startRound() {
+  state.round++;
+  state.sessionQueue = buildRound();
+  state.currentIdx = 0;
+  state.sessionCorrect = 0;
+  state.sessionResults = [];
+  saveState();
+  showScreen('screenQuestion');
+  renderQuestion();
+}
+
+// ── Rendering ──
+function renderQuestion() {
+  const q = state.sessionQueue[state.currentIdx];
+  const total = state.sessionQueue.length;
+  const pct = (state.currentIdx / total) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('qCounter').textContent = `${state.currentIdx + 1} / ${total}`;
+
+  if (q.type === 'debate') {
+    showScreen('screenDebate');
+    document.getElementById('debateText').textContent = q.question;
+    document.getElementById('modelText').textContent = q.model_answer;
+    document.getElementById('modelAnswer').classList.remove('show');
+    document.getElementById('selfAssess').classList.remove('show');
+    document.getElementById('btnSeeAnswer').style.display = 'block';
+    document.getElementById('debateTextarea').value = '';
+    document.getElementById('debateTextarea').disabled = false;
+    document.getElementById('debateSubmittedNote').classList.remove('show');
+    return;
+  }
+
+  showScreen('screenQuestion');
+  const chip = document.getElementById('qTypeChip');
+  chip.textContent = q.type === 'facts' ? 'Facts' : 'Policy';
+  chip.className = 'q-type-chip ' + (q.type === 'facts' ? 'chip-facts' : 'chip-policy');
+  document.getElementById('qText').textContent = q.question;
+
+  const opts = [q.correct, ...q.wrong].sort(() => Math.random() - 0.5);
+  const wrap = document.getElementById('optionsWrap');
+  wrap.innerHTML = '';
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = opt;
+    btn.onclick = () => selectAnswer(btn, opt, q);
+    wrap.appendChild(btn);
+  });
+
+  document.getElementById('feedbackBox').className = 'feedback-box';
+  document.getElementById('btnNext').className = 'btn-next';
+}
+
+function selectAnswer(btn, selected, q) {
+  document.querySelectorAll('.option').forEach(b => b.classList.add('disabled'));
+  const correct = selected === q.correct;
+
+  if (correct) {
+    btn.classList.add('correct');
+    state.sessionCorrect++;
+    state.allTimeCorrect++;
+  } else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('.option').forEach(b => {
+      if (b.textContent === q.correct) b.classList.add('reveal');
+    });
+  }
+  state.allTimeAnswered++;
+
+  if (!state.topicStats[q.topic]) state.topicStats[q.topic] = { correct: 0, total: 0 };
+  state.topicStats[q.topic].total++;
+  if (correct) state.topicStats[q.topic].correct++;
+
+  state.sessionResults.push({ topic: q.topic, correct, type: q.type });
+
+  const fb = document.getElementById('feedbackBox');
+  fb.className = 'feedback-box show ' + (correct ? 'correct' : 'wrong');
+  document.getElementById('feedbackResult').textContent = correct ? '✓ Correct' : '✗ Incorrect';
+  document.getElementById('feedbackExplain').textContent = q.explanation;
+  const src = document.getElementById('feedbackSource');
+  if (q.source_url) {
+    src.innerHTML = `Source: <a href="${q.source_url}" target="_blank">${q.source}</a>`;
+  } else {
+    src.textContent = q.source ? `Source: ${q.source}` : '';
+  }
+
+  document.getElementById('btnNext').className = 'btn-next show';
+  saveState();
+}
+
+function submitAndShowAnswer() {
+  const q = state.sessionQueue[state.currentIdx];
+  const answer = document.getElementById('debateTextarea').value.trim();
+
+  // Save response to localStorage (replace with Google Sheet write-back when connected)
+  const debateResponses = JSON.parse(localStorage.getItem('qt_debate_responses') || '[]');
+  debateResponses.push({
+    timestamp: new Date().toISOString(),
+    round: state.round,
+    question_id: q.id,
+    question: q.question,
+    topic: q.topic,
+    answer: answer,
+    assessed: null
+  });
+  localStorage.setItem('qt_debate_responses', JSON.stringify(debateResponses));
+
+  // Disable textarea, show saved note
+  document.getElementById('debateTextarea').disabled = true;
+  if (answer.length > 0) {
+    document.getElementById('debateSubmittedNote').classList.add('show');
+  }
+
+  // Show model answer and self-assess
+  document.getElementById('modelAnswer').classList.add('show');
+  document.getElementById('selfAssess').classList.add('show');
+  document.getElementById('btnSeeAnswer').style.display = 'none';
+}
+
+function assessDebate(assessment) {
+  const q = state.sessionQueue[state.currentIdx];
+  state.debateTotal++;
+  if (assessment === 'got_it') state.debateGotIt++;
+  state.sessionResults.push({ topic: q.topic, correct: assessment === 'got_it', type: 'debate' });
+
+  // Update the saved response with the self-assessment
+  const debateResponses = JSON.parse(localStorage.getItem('qt_debate_responses') || '[]');
+  const last = debateResponses[debateResponses.length - 1];
+  if (last && last.question_id === q.id) last.assessed = assessment;
+  localStorage.setItem('qt_debate_responses', JSON.stringify(debateResponses));
+
+  saveState();
+  nextQuestion();
+}
+
+function nextQuestion() {
+  state.currentIdx++;
+  if (state.currentIdx >= state.sessionQueue.length) {
+    endRound();
+  } else {
+    renderQuestion();
+  }
+}
+
+function endRound() {
+  // Check streak
+  const today = new Date().toDateString();
+  if (state.lastPlayed !== today) {
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    state.streak = (state.lastPlayed === yesterday) ? state.streak + 1 : 1;
+    state.lastPlayed = today;
+  }
+  saveState();
+
+  document.getElementById('progressFill').style.width = '100%';
+  showScreen('screenComplete');
+
+  const totalFacts = state.sessionResults.filter(r => r.type !== 'debate').length;
+  const correctFacts = state.sessionResults.filter(r => r.type !== 'debate' && r.correct).length;
+  const pct = totalFacts > 0 ? Math.round((correctFacts / totalFacts) * 100) : 0;
+
+  document.getElementById('completeRoundLabel').textContent = `Round ${state.round} complete`;
+  document.getElementById('scoreBig').textContent = `${correctFacts}/${totalFacts}`;
+  document.getElementById('completeIcon').textContent = pct >= 80 ? '🎯' : pct >= 60 ? '💪' : '📚';
+  document.getElementById('completeTitle').textContent = pct >= 80 ? 'Sharp.' : pct >= 60 ? 'Getting there.' : 'More to learn.';
+  document.getElementById('completeSub').textContent = pct >= 80
+    ? 'Strong round. Those answers need to come out just as fast when a journalist asks.'
+    : pct >= 60 ? 'Solid. Weak spots showing in the breakdown below — that\'s what the next round is for.'
+    : 'Tougher round. Review the explanations, then go again.';
+
+  // Debate readiness
+  const readinessPct = state.debateTotal > 0 ? Math.round((state.debateGotIt / state.debateTotal) * 100) : 0;
+  document.getElementById('readinessBar').style.width = readinessPct + '%';
+  document.getElementById('readinessPct').textContent = state.debateTotal > 0
+    ? `${readinessPct}% — based on ${state.debateTotal} Debate Prep card${state.debateTotal !== 1 ? 's' : ''}`
+    : 'Tracking as you complete Debate Prep cards';
+
+  // Breakdown
+  const breakdown = document.getElementById('breakdownWrap');
+  const byTopic = {};
+  state.sessionResults.forEach(r => {
+    if (!byTopic[r.topic]) byTopic[r.topic] = { correct: 0, total: 0, type: r.type };
+    byTopic[r.topic].total++;
+    if (r.correct) byTopic[r.topic].correct++;
+  });
+  breakdown.innerHTML = '';
+  Object.entries(byTopic).forEach(([topic, data]) => {
+    const row = document.createElement('div');
+    row.className = 'breakdown-row';
+    const isDebate = data.type === 'debate';
+    const resultPct = isDebate ? null : Math.round((data.correct / data.total) * 100);
+    row.innerHTML = `
+      <span class="breakdown-topic">${topic}</span>
+      <span class="breakdown-result ${isDebate ? 'purple' : data.correct === data.total ? 'green' : data.correct === 0 ? 'red' : ''}">
+        ${isDebate ? '🎤 Debate card' : `${data.correct}/${data.total}`}
+      </span>
+    `;
+    breakdown.appendChild(row);
+  });
+
+  // Milestone
+  const milestones = { 5: ['🥊', "5 rounds in. You're warming up."], 10: ['🏆', "Round 10. You'd survive a press conference."], 20: ['⚡', "Round 20. This is what debate readiness looks like."], 50: ['🎖️', "50 rounds. Debates don't scare you anymore."] };
+  const m = milestones[state.round];
+  if (m) {
+    document.getElementById('milestoneEmoji').textContent = m[0];
+    document.getElementById('milestoneText').textContent = m[1];
+    document.getElementById('milestoneBanner').classList.add('show');
+  } else {
+    document.getElementById('milestoneBanner').classList.remove('show');
+  }
+
+  updateStreak();
+}
+
+function goAnotherRound() { startRound(); }
+function goHome() { showScreen('screenHome'); updateHomeScreen(); }
+
+function updateHomeScreen() {
+  const roundNum = state.round + 1;
+  document.getElementById('homeRoundNum').textContent = roundNum;
+  document.getElementById('startRoundNum').textContent = roundNum;
+  document.getElementById('statRounds').textContent = state.round;
+
+  if (state.allTimeAnswered > 0) {
+    document.getElementById('statAccuracy').textContent = Math.round((state.allTimeCorrect / state.allTimeAnswered) * 100) + '%';
+  }
+  if (state.debateTotal > 0) {
+    document.getElementById('statDebate').textContent = Math.round((state.debateGotIt / state.debateTotal) * 100) + '%';
+  }
+
+  if (state.round > 0) {
+    document.getElementById('homeSub').textContent = `Round ${roundNum} ready. Keep the streak alive.`;
+    document.getElementById('anotherRoundBtn').style.display = 'block';
+  }
+
+  const topics = Object.entries(state.topicStats);
+  if (topics.length > 0) {
+    document.getElementById('topicList').style.display = 'block';
+    const rows = document.getElementById('topicRows');
+    rows.innerHTML = '';
+    topics.sort((a, b) => (b[1].correct / b[1].total) - (a[1].correct / a[1].total));
+    topics.forEach(([topic, data]) => {
+      const pct = Math.round((data.correct / data.total) * 100);
+      const color = pct >= 80 ? '#1a9e5c' : pct >= 60 ? '#2952e3' : '#d63e3e';
+      const row = document.createElement('div');
+      row.className = 'topic-row';
+      row.innerHTML = `
+        <span class="topic-name">${topic}</span>
+        <div class="topic-bar-wrap"><div class="topic-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <span class="topic-pct">${pct}%</span>
+      `;
+      rows.appendChild(row);
+    });
+  }
+
+  updateStreak();
+}
+
+function updateStreak() {
+  document.getElementById('streakCount').textContent = state.streak;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── Init ──
+loadState();
+updateHomeScreen();
+</script>
+</body>
+</html>
