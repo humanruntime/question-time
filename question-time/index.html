@@ -810,17 +810,6 @@ function submitAndShowAnswer() {
   });
   localStorage.setItem('qt_debate_responses', JSON.stringify(debateResponses));
 
-  // Write debate response to Sheet if connected
-  writeResponse({
-    type: 'debate',
-    timestamp: new Date().toISOString(),
-    round: state.round,
-    question_id: q.id,
-    topic: q.topic,
-    question: q.question,
-    answer
-  });
-
   // Disable textarea, show saved note
   document.getElementById('debateTextarea').disabled = true;
   if (answer.length > 0) {
@@ -845,7 +834,7 @@ function assessDebate(assessment) {
   if (last && last.question_id === q.id) last.assessed = assessment;
   localStorage.setItem('qt_debate_responses', JSON.stringify(debateResponses));
 
-  // Write self-assessment to Sheet
+  // Write single complete row to Sheet — answer + self-assessment together
   writeResponse({
     type: 'debate',
     timestamp: new Date().toISOString(),
@@ -853,6 +842,7 @@ function assessDebate(assessment) {
     question_id: q.id,
     topic: q.topic,
     question: q.question,
+    answer: last ? last.answer : '',
     self_assessment: assessment
   });
 
