@@ -612,7 +612,7 @@ const QUESTIONS = [
 // CONFIG — paste the Sheet ID here once the Google Sheet is set up
 // ─────────────────────────────────────────────────────────────────
 const CONFIG = {
-  sheetId: '1gcO5tppDGvsEd29o0Q0jJe2fBd8zRzR-vmVkZ12mdGA'
+  sheetId: '1RnfGEEfUW7PNbOgaxGBkmgAAj4YkW142'
 };
 // ─────────────────────────────────────────────────────────────────
 
@@ -628,6 +628,7 @@ let state = {
   topicStats: {},
   streak: 0,
   lastPlayed: null,
+  seenIds: {}, // tracks which question ids have been shown — no repeats until all seen
 };
 
 function loadState() {
@@ -636,13 +637,23 @@ function loadState() {
 }
 function saveState() { localStorage.setItem('fa_state', JSON.stringify(state)); }
 
-// ── Round setup: one question from each topic ──
+// ── Round setup: one question from each topic, no repeats until all seen ──
 function buildRound() {
   const topics = [...new Set(QUESTIONS.map(q => q.topic))];
+  if (!state.seenIds) state.seenIds = {};
   const round = [];
   topics.forEach(topic => {
     const topicQs = QUESTIONS.filter(q => q.topic === topic);
-    round.push(topicQs[Math.floor(Math.random() * topicQs.length)]);
+    // Find questions in this topic not yet seen
+    let unseen = topicQs.filter(q => !state.seenIds[q.id]);
+    // If all seen, reset this topic so it can cycle again
+    if (unseen.length === 0) {
+      topicQs.forEach(q => { delete state.seenIds[q.id]; });
+      unseen = topicQs;
+    }
+    const pick = unseen[Math.floor(Math.random() * unseen.length)];
+    state.seenIds[pick.id] = true;
+    round.push(pick);
   });
   return round.sort(() => Math.random() - 0.5);
 }
