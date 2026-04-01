@@ -632,10 +632,10 @@ let state = {
 };
 
 function loadState() {
-  const saved = localStorage.getItem('fa_state');
+  const saved = localStorage.getItem('fa_4ls_state');
   if (saved) { try { state = { ...state, ...JSON.parse(saved) }; } catch(e) {} }
 }
-function saveState() { localStorage.setItem('fa_state', JSON.stringify(state)); }
+function saveState() { localStorage.setItem('fa_4ls_state', JSON.stringify(state)); }
 
 // ── Round setup: one question from each topic, no repeats until all seen ──
 function buildRound() {
