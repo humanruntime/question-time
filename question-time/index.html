@@ -629,11 +629,10 @@
 // CONFIG — Julia fills these in when Sam sends them over
 // ─────────────────────────────────────────────────────────────────
 const CONFIG = {
-  // The long string from Sam's Google Sheet URL — between /d/ and /edit
-  sheetId: '1Gw7TRz37ejq2-DrKioJj_zo4y9cNQcfdTgsXZuf-Jx4',
+  // Published CSV URL — File → Share → Publish to web → questions tab → CSV
+  sheetUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQdYkBuCsgKs2sIN_ySYen6WsrhHUjg40g_31I4E3qj9N_ikTz2YEAlFiw7zMpi6w3CnSMQmafuCh8M/pub?gid=0&single=true&output=csv',
 
-  // The Apps Script endpoint URL from Sam's one-time deployment
-  // Leave blank — write-back is silently skipped, still works fine for MVP
+  // Apps Script endpoint for writing Mahesh's answers back
   appsScriptUrl: 'https://script.google.com/macros/s/AKfycbzNWN0q_k_T1i-96XaK01KTdbDHUtnLK9D6YN2M1-UBNmX8TAoJzNylTyjtZ8VUbYsn/exec'
 };
 // ─────────────────────────────────────────────────────────────────
@@ -986,11 +985,10 @@ function showScreen(id) {
 // Fetches questions from the published CSV if a Sheet ID is configured.
 // Falls back to the embedded question bank if anything goes wrong.
 async function loadQuestionsFromSheet() {
-  if (!CONFIG.sheetId) return; // no Sheet connected yet — use embedded questions
+  if (!CONFIG.sheetUrl) return; // no Sheet connected yet — use embedded questions
 
-  const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&sheet=questions`;
   try {
-    const res = await fetch(url);
+    const res = await fetch(CONFIG.sheetUrl);
     if (!res.ok) return;
     const csv = await res.text();
     const parsed = parseSheetCSV(csv);
