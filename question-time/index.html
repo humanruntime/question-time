@@ -625,7 +625,20 @@
 </div>
 
 <script>
-// ── Sample question bank (replace with Google Sheets load) ──
+// ─────────────────────────────────────────────────────────────────
+// CONFIG — Julia fills these in when Sam sends them over
+// ─────────────────────────────────────────────────────────────────
+const CONFIG = {
+  // The long string from Sam's Google Sheet URL — between /d/ and /edit
+  sheetId: '',
+
+  // The Apps Script endpoint URL from Sam's one-time deployment
+  // Leave blank — write-back is silently skipped, still works fine for MVP
+  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbzNWN0q_k_T1i-96XaK01KTdbDHUtnLK9D6YN2M1-UBNmX8TAoJzNylTyjtZ8VUbYsn/exec'
+};
+// ─────────────────────────────────────────────────────────────────
+
+// ── Question bank — fallback while Sheet isn't connected ──
 const QUESTIONS = [
   // FACTS
   { id: 1, type: 'facts', topic: 'Economy', question: "What is New Zealand's approximate unemployment rate as of early 2026?", correct: "4.8%", wrong: ["2.1%", "7.3%", "9.0%"], explanation: "NZ unemployment was around 4.8% in early 2026, up from record lows of under 3% in 2022 as the economy cooled.", source: "Stats NZ", source_url: "https://www.stats.govt.nz" },
@@ -767,6 +780,16 @@ function selectAnswer(btn, selected, q) {
 
   document.getElementById('btnNext').className = 'btn-next show';
   saveState();
+
+  // Write to Sheet if connected
+  writeResponse({
+    type: 'fact',
+    timestamp: new Date().toISOString(),
+    round: state.round,
+    question_id: q.id,
+    topic: q.topic,
+    correct
+  });
 }
 
 function submitAndShowAnswer() {
@@ -785,6 +808,17 @@ function submitAndShowAnswer() {
     assessed: null
   });
   localStorage.setItem('qt_debate_responses', JSON.stringify(debateResponses));
+
+  // Write debate response to Sheet if connected
+  writeResponse({
+    type: 'debate',
+    timestamp: new Date().toISOString(),
+    round: state.round,
+    question_id: q.id,
+    topic: q.topic,
+    question: q.question,
+    answer
+  });
 
   // Disable textarea, show saved note
   document.getElementById('debateTextarea').disabled = true;
@@ -946,9 +980,95 @@ function showScreen(id) {
   document.getElementById(id).classList.add('active');
 }
 
+// ── Google Sheets loader ──
+// Fetches questions from the published CSV if a Sheet ID is configured.
+// Falls back to the embedded question bank if anything goes wrong.
+async function loadQuestionsFromSheet() {
+  if (!CONFIG.sheetId) return; // no Sheet connected yet — use embedded questions
+
+  const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&sheet=questions`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const csv = await res.text();
+    const parsed = parseSheetCSV(csv);
+    if (parsed.length > 0) {
+      QUESTIONS.length = 0;
+      QUESTIONS.push(...parsed);
+    }
+  } catch(e) {
+    // Sheet unreachable — silent fallback to embedded questions
+  }
+}
+
+function parseSheetCSV(text) {
+  // Splits CSV text into rows, handling quoted fields with commas inside them.
+  const splitRows = str => {
+    const rows = []; let cur = ''; let inQ = false;
+    for (let i = 0; i < str.length; i++) {
+      const c = str[i];
+      if (c === '"') { if (inQ && str[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+      else if ((c === '\n' || c === '\r') && !inQ) { if (cur || rows.length) rows.push(cur); cur = ''; if (c === '\r' && str[i+1] === '\n') i++; }
+      else cur += c;
+    }
+    if (cur) rows.push(cur);
+    return rows;
+  };
+  const splitFields = row => {
+    const fields = []; let field = ''; let inQ = false;
+    for (let i = 0; i < row.length; i++) {
+      const c = row[i];
+      if (c === '"') { if (inQ && row[i+1] === '"') { field += '"'; i++; } else inQ = !inQ; }
+      else if (c === ',' && !inQ) { fields.push(field); field = ''; }
+      else field += c;
+    }
+    fields.push(field);
+    return fields;
+  };
+  const rows = splitRows(text);
+  if (rows.length < 2) return [];
+  const headers = splitFields(rows[0]).map(h => h.trim().toLowerCase());
+  return rows.slice(1)
+    .filter(r => r.trim())
+    .map(row => {
+      const vals = splitFields(row);
+      const get = key => (vals[headers.indexOf(key)] || '').trim();
+      return {
+        id: parseInt(get('id')) || 0,
+        type: get('type') || 'facts',
+        topic: get('topic') || 'General',
+        question: get('question'),
+        correct: get('correct'),
+        wrong: [get('wrong_1'), get('wrong_2'), get('wrong_3')].filter(Boolean),
+        explanation: get('explanation'),
+        source: get('source'),
+        source_url: get('source_url'),
+        model_answer: get('model_answer')
+      };
+    })
+    .filter(q => q.question && q.correct);
+}
+
+// ── Response write-back ──
+// Posts answer data to the Apps Script endpoint so Sam can review in the Sheet.
+// Silent no-op if no endpoint is configured.
+function writeResponse(data) {
+  if (!CONFIG.appsScriptUrl) return;
+  fetch(CONFIG.appsScriptUrl, {
+    method: 'POST',
+    mode: 'no-cors', // Apps Script doesn't send CORS headers — the POST still lands
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).catch(() => {}); // never surface errors to Mahesh
+}
+
 // ── Init ──
-loadState();
-updateHomeScreen();
+async function init() {
+  loadState();
+  await loadQuestionsFromSheet();
+  updateHomeScreen();
+}
+init();
 </script>
 </body>
 </html>
