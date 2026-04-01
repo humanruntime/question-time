@@ -788,7 +788,8 @@ function selectAnswer(btn, selected, q) {
     round: state.round,
     question_id: q.id,
     topic: q.topic,
-    correct
+    correct,
+    question: q.question
   });
 }
 
@@ -843,6 +844,17 @@ function assessDebate(assessment) {
   const last = debateResponses[debateResponses.length - 1];
   if (last && last.question_id === q.id) last.assessed = assessment;
   localStorage.setItem('qt_debate_responses', JSON.stringify(debateResponses));
+
+  // Write self-assessment to Sheet
+  writeResponse({
+    type: 'debate',
+    timestamp: new Date().toISOString(),
+    round: state.round,
+    question_id: q.id,
+    topic: q.topic,
+    question: q.question,
+    self_assessment: assessment
+  });
 
   saveState();
   nextQuestion();
