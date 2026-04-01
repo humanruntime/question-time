@@ -612,7 +612,7 @@ const QUESTIONS = [
 // CONFIG — paste the Sheet ID here once the Google Sheet is set up
 // ─────────────────────────────────────────────────────────────────
 const CONFIG = {
-  sheetId: '1L9j4rK4tBjATzJ3J9Jg8BIHfduFDn-oNs23IRAY42L8'
+  sheetUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQgxNr8rLHsWRJ8vc-GNg0Oy16q5P7WzlaMwqKmRMEiMo-gwdFGdHxseVvpQR-SOrOPYJp82tof4woi/pub?gid=995962533&single=true&output=csv'
 };
 // ─────────────────────────────────────────────────────────────────
 
@@ -883,10 +883,9 @@ function showScreen(id) {
 
 // ── Google Sheets loader ──
 async function loadQuestionsFromSheet() {
-  if (!CONFIG.sheetId) return;
-  const url = `https://docs.google.com/spreadsheets/d/${CONFIG.sheetId}/gviz/tq?tqx=out:csv&sheet=Sheet1`;
+  if (!CONFIG.sheetUrl) return;
   try {
-    const res = await fetch(url);
+    const res = await fetch(CONFIG.sheetUrl);
     if (!res.ok) return;
     const csv = await res.text();
     const parsed = parseSheetCSV(csv);
