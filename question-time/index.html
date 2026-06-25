@@ -648,8 +648,8 @@ const QUESTIONS = [
   { id: 6, type: 'facts', topic: 'Economy', question: "What percentage of NZ government revenue comes from income tax (personal and corporate)?", correct: "Approximately 50–55%", wrong: ["Around 20%", "Around 80%", "Around 35%"], explanation: "Income taxes — personal and corporate combined — make up roughly half of government revenue, with GST contributing another large portion.", source: "NZ Treasury", source_url: "https://www.treasury.govt.nz" },
 
   // POLICY
-  { id: 7, type: 'policy', topic: 'National Party', question: "Did the National-led government support or oppose the Fast-track Approvals Bill?", correct: "Supported — it was a National coalition initiative", wrong: ["Opposed it", "Abstained from the vote", "Referred it to select committee indefinitely"], explanation: "Fast-track Approvals was a key National coalition priority, designed to speed up consenting for infrastructure and housing projects.", source: "NZ Parliament", source_url: "https://www.parliament.nz" },
-  { id: 8, type: 'policy', topic: 'National Party', question: "Which portfolio does National hold that is most directly relevant to housing supply in Tāmaki?", correct: "Housing and RMA Reform", wrong: ["Finance", "Education", "Conservation"], explanation: "The Housing Minister and the Resource Management Act reform portfolio are central to National's plan to increase housing supply through planning reform.", source: "beehive.govt.nz", source_url: "https://www.beehive.govt.nz" },
+  { id: 7, type: 'policy', topic: 'National Party', question: "Did the National-led government support or oppose the Fast-track Approvals Bill?", correct: "Supported — it was a National coalition priority", wrong: ["Opposed it as a Green Party concession", "Abstained while it was in committee review", "Backed a watered-down version only"], explanation: "Fast-track Approvals was a key National coalition priority, designed to speed up consenting for infrastructure and housing projects.", source: "NZ Parliament", source_url: "https://www.parliament.nz" },
+  { id: 8, type: 'policy', topic: 'National Party', question: "Which portfolio does National hold that is most directly relevant to housing supply in Tāmaki?", correct: "Housing and RMA Reform", wrong: ["Finance and Infrastructure", "Education and Skills", "Regional Development"], explanation: "The Housing Minister and the Resource Management Act reform portfolio are central to National's plan to increase housing supply through planning reform.", source: "beehive.govt.nz", source_url: "https://www.beehive.govt.nz" },
 
   // DEBATE PREP
   { id: 9, type: 'debate', topic: 'BvV / ACT', question: "Brooke van Velden has just announced she's retiring from politics. A journalist asks: 'Do you think she did a good job as Tāmaki's MP?'", model_answer: "Acknowledge her service without being dismissive or sycophantic. Focus forward: 'Brooke worked hard for Tāmaki and I respect that. But elections are about the future, not the past. What I hear from people in Glen Innes and Panmure is that they want someone who understands the cost of living pressures they're facing right now — and that's exactly what I'll be focused on.' Pivot to your strengths without attacking her record.", source: "" },
@@ -1007,7 +1007,10 @@ function parseSheetCSV(text) {
     const rows = []; let cur = ''; let inQ = false;
     for (let i = 0; i < str.length; i++) {
       const c = str[i];
-      if (c === '"') { if (inQ && str[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+      // Preserve quotes so splitFields can handle commas inside quoted cells.
+      // Previously quotes were stripped here, causing splitFields to incorrectly
+      // split question text at every comma — truncating questions mid-sentence.
+      if (c === '"') { if (inQ && str[i+1] === '"') { cur += '""'; i++; } else { inQ = !inQ; cur += '"'; } }
       else if ((c === '\n' || c === '\r') && !inQ) { if (cur || rows.length) rows.push(cur); cur = ''; if (c === '\r' && str[i+1] === '\n') i++; }
       else cur += c;
     }
@@ -1046,7 +1049,7 @@ function parseSheetCSV(text) {
         model_answer: get('model_answer')
       };
     })
-    .filter(q => q.question && q.correct);
+    .filter(q => q.question && (q.correct || q.model_answer)); // debate questions use model_answer not correct
 }
 
 // ── Response write-back ──
